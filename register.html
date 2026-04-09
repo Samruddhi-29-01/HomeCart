@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register - HomeKart</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="index.html" class="logo">🛋️ HomeKart</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="cart.html">Cart</a></li>
+        <li><a href="login.html">Login</a></li>
+        <li><a href="register.html">Register</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <div class="form-container">
+      <h2>Create Your Account</h2>
+      <div class="form-group">
+        <input id="name" type="text" placeholder="Full Name" required>
+      </div>
+      <div class="form-group">
+        <input id="email" type="email" placeholder="Email" required>
+      </div>
+      <div class="form-group">
+        <input id="password" type="password" placeholder="Password" required>
+      </div>
+      <button onclick="register()" class="btn">Register</button>
+    </div>
+  </main>
+
+  <script>
+  function register() {
+    const name = document.getElementById("name");
+    const email = document.getElementById("email");
+    const password = document.getElementById("password");
+    const button = document.querySelector(".btn");
+
+    // Clear previous errors
+    clearErrors();
+
+    // Basic validation
+    if (!name.value || !email.value || !password.value) {
+      showError("Please fill in all fields");
+      return;
+    }
+
+    if (name.value.length < 2) {
+      showError("Name must be at least 2 characters long");
+      return;
+    }
+
+    if (!isValidEmail(email.value)) {
+      showError("Please enter a valid email address");
+      return;
+    }
+
+    if (password.value.length < 6) {
+      showError("Password must be at least 6 characters long");
+      return;
+    }
+
+    // Show loading state
+    button.textContent = "Creating account...";
+    button.disabled = true;
+
+    fetch('/register', {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        name: name.value,
+        email: email.value,
+        password: password.value
+      })
+    })
+    .then(res => {
+      if (res.ok) {
+        return res.text();
+      } else {
+        throw new Error("Registration failed");
+      }
+    })
+    .then(msg => {
+      showNotification("Account created successfully! Please login.", "success");
+      setTimeout(() => {
+        location = "login.html";
+      }, 2000);
+    })
+    .catch(error => {
+      showError(error.message || "Registration failed. Please try again.");
+      button.textContent = "Register";
+      button.disabled = false;
+    });
+  }
+
+  function showError(message) {
+    const errorDiv = document.createElement("div");
+    errorDiv.className = "error-message";
+    errorDiv.textContent = message;
+    document.querySelector(".form-container").prepend(errorDiv);
+  }
+
+  function clearErrors() {
+    const errors = document.querySelectorAll(".error-message");
+    errors.forEach(error => error.remove());
+  }
+
+  function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  function showNotification(message, type) {
+    const notification = document.createElement("div");
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+      notification.remove();
+    }, 3000);
+  }
+
+  // Add enter key support
+  document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        register();
+      }
+    });
+  });
+  </script>
+</body>
+</html>

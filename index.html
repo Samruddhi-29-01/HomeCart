@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HomeKart - Your Home, Your Style</title>
+  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="index.html" class="logo">🛋️ HomeKart</a>
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search for furniture, decor, appliances..." class="search-input">
+        <button onclick="searchProducts()" class="search-btn">🔍</button>
+      </div>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="cart.html">Cart <span id="cart-count" class="cart-count">0</span></a></li>
+        <li><a href="login.html">Login</a></li>
+        <li><a href="register.html">Register</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Transform Your Home with Style</h1>
+      <p>Discover premium furniture, decor, and appliances for every room in your home. Quality products at affordable prices.</p>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-number">10,000+</span>
+          <span class="stat-label">Products</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">50,000+</span>
+          <span class="stat-label">Happy Customers</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">4.8★</span>
+          <span class="stat-label">Rating</span>
+        </div>
+      </div>
+      <a href="#products" class="btn hero-cta">Shop Now</a>
+    </div>
+    <div class="hero-image">
+      <div class="hero-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="categories">
+    <div class="container">
+      <h2>Shop by Category</h2>
+      <div class="category-grid">
+        <div class="category-card" onclick="filterByCategory('furniture')">
+          <div class="category-icon">🪑</div>
+          <h3>Furniture</h3>
+          <p>Chairs, tables, sofas & more</p>
+        </div>
+        <div class="category-card" onclick="filterByCategory('decor')">
+          <div class="category-icon">🏺</div>
+          <h3>Home Decor</h3>
+          <p>Lamps, vases, wall art</p>
+        </div>
+        <div class="category-card" onclick="filterByCategory('kitchen')">
+          <div class="category-icon">🍳</div>
+          <h3>Kitchen</h3>
+          <p>Appliances & utensils</p>
+        </div>
+        <div class="category-card" onclick="filterByCategory('bedroom')">
+          <div class="category-icon">🛏️</div>
+          <h3>Bedroom</h3>
+          <p>Beds, mattresses, storage</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Promotional Banner -->
+  <section class="promo-banner">
+    <div class="container">
+      <div class="promo-content">
+        <h2>🎉 Special Offer!</h2>
+        <p>Get 20% off on your first purchase + Free delivery on orders above ₹999</p>
+        <div class="promo-timer">
+          <span>Offer ends in:</span>
+          <div class="timer">
+            <div class="time-block">
+              <span id="days" class="time-number">02</span>
+              <span class="time-label">Days</span>
+            </div>
+            <div class="time-block">
+              <span id="hours" class="time-number">14</span>
+              <span class="time-label">Hours</span>
+            </div>
+            <div class="time-block">
+              <span id="minutes" class="time-number">30</span>
+              <span class="time-label">Min</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Products Section -->
+  <section id="products-section" class="products-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Featured Products</h2>
+        <div class="filter-buttons">
+          <button onclick="showAllProducts()" class="filter-btn active">All</button>
+          <button onclick="filterByCategory('furniture')" class="filter-btn">Furniture</button>
+          <button onclick="filterByCategory('decor')" class="filter-btn">Decor</button>
+          <button onclick="filterByCategory('kitchen')" class="filter-btn">Kitchen</button>
+        </div>
+      </div>
+      <div id="products" class="products-grid"></div>
+    </div>
+  </section>
+
+  <!-- Newsletter Section -->
+  <section class="newsletter">
+    <div class="container">
+      <div class="newsletter-content">
+        <h2>Stay Updated</h2>
+        <p>Subscribe to get special offers, new product launches, and home decor tips!</p>
+        <div class="newsletter-form">
+          <input type="email" placeholder="Enter your email" class="newsletter-input">
+          <button class="btn newsletter-btn">Subscribe</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>HomeKart</h3>
+          <p>Your trusted partner for beautiful home essentials. Quality products, exceptional service.</p>
+          <div class="social-links">
+            <a href="#" class="social-link">📘</a>
+            <a href="#" class="social-link">📷</a>
+            <a href="#" class="social-link">🐦</a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="cart.html">Cart</a></li>
+            <li><a href="login.html">Login</a></li>
+            <li><a href="register.html">Register</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Categories</h4>
+          <ul>
+            <li><a href="#" onclick="filterByCategory('furniture')">Furniture</a></li>
+            <li><a href="#" onclick="filterByCategory('decor')">Home Decor</a></li>
+            <li><a href="#" onclick="filterByCategory('kitchen')">Kitchen</a></li>
+            <li><a href="#" onclick="filterByCategory('bedroom')">Bedroom</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Support</h4>
+          <ul>
+            <li><a href="#">Contact Us</a></li>
+            <li><a href="#">Shipping Info</a></li>
+            <li><a href="#">Returns</a></li>
+            <li><a href="#">FAQ</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 HomeKart. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
