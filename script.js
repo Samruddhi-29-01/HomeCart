@@ -9,6 +9,10 @@ fetch('/products')
   allProducts = data;
   renderProducts(data);
   updateCartCount();
+})
+.catch(error => {
+  console.error('Error loading products:', error);
+  showNotification('Unable to load products right now', 'error');
 });
 
 // Render products with filtering
@@ -26,7 +30,7 @@ function renderProducts(products) {
             <span id="qty-${p._id}" class="quantity">1</span>
             <button onclick="updateQuantity('${p._id}', 1)" class="qty-btn">+</button>
           </div>
-          <button onclick="addToCart('${p._id}')" class="btn add-to-cart-btn">Add to Cart</button>
+          <button onclick="addToCart('${p._id}', this)" class="btn add-to-cart-btn">Add to Cart</button>
         </div>
       </div>
     `;
@@ -55,12 +59,7 @@ function searchProducts() {
 // Filter by category
 function filterByCategory(category) {
   currentFilter = category;
-
-  // Update active filter button
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  event.target.classList.add('active');
+  setActiveFilterButton(category);
 
   if (category === 'all') {
     renderProducts(allProducts);
@@ -77,22 +76,51 @@ function filterByCategory(category) {
 
 // Show all products
 function showAllProducts() {
-  currentFilter = 'all';
+  filterByCategory('all');
+}
+
+function setActiveFilterButton(category) {
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.classList.remove('active');
   });
-  document.querySelector('.filter-btn').classList.add('active');
-  renderProducts(allProducts);
+
+  const activeBtn = document.querySelector(`.filter-btn[data-category="${category}"]`);
+  if (activeBtn) {
+    activeBtn.classList.add('active');
+  }
 }
 
 // Update cart count
 function updateCartCount() {
-  // This would typically fetch cart data, but for demo purposes:
-  const cartCount = localStorage.getItem('cartCount') || 0;
   const cartCountElement = document.getElementById('cart-count');
-  if (cartCountElement) {
-    cartCountElement.textContent = cartCount;
+  if (!cartCountElement) {
+    return;
   }
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    cartCountElement.textContent = '0';
+    return;
+  }
+
+  fetch('/cart', {
+    headers: {
+      Authorization: token
+    }
+  })
+  .then(res => {
+    if (!res.ok) {
+      throw new Error('Unable to fetch cart count');
+    }
+    return res.json();
+  })
+  .then(items => {
+    const count = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+    cartCountElement.textContent = count;
+  })
+  .catch(() => {
+    cartCountElement.textContent = '0';
+  });
 }
 
 // Quantity management
@@ -104,8 +132,7 @@ function updateQuantity(productId, change) {
 }
 
 // Enhanced add to cart with loading states and feedback
-function addToCart(id) {
-  const button = event.target;
+function addToCart(id, button) {
   const originalText = button.textContent;
   const quantity = parseInt(document.getElementById(`qty-${id}`).textContent);
 
@@ -132,8 +159,6 @@ function addToCart(id) {
       button.classList.add("success");
 
       // Update cart count
-      let currentCount = parseInt(localStorage.getItem('cartCount') || 0);
-      localStorage.setItem('cartCount', currentCount + quantity);
       updateCartCount();
 
       setTimeout(() => {

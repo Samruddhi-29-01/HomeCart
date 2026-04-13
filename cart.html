@@ -31,7 +31,12 @@
         Authorization: localStorage.getItem("token")
       }
     })
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) {
+        throw new Error('Unable to load cart');
+      }
+      return res.json();
+    })
     .then(data => {
       cartData = data;
       renderCart();
@@ -60,14 +65,15 @@
     let total = 0;
 
     cartData.forEach((item, index) => {
-      const itemTotal = item.price * item.quantity;
+      const unitPrice = Number(item.price) || 0;
+      const itemTotal = unitPrice * item.quantity;
       total += itemTotal;
 
       out += `
         <div class="cart-item">
           <div class="item-info">
-            <h4>${item.productId}</h4>
-            <p class="price">₹${item.price} each</p>
+            <h4>${item.productName}</h4>
+            <p class="price">₹${unitPrice} each</p>
           </div>
           <div class="quantity-controls">
             <button onclick="updateCartQuantity(${index}, -1)" class="qty-btn">-</button>

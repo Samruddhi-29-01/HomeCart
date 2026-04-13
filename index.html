@@ -114,10 +114,10 @@
       <div class="section-header">
         <h2>Featured Products</h2>
         <div class="filter-buttons">
-          <button onclick="showAllProducts()" class="filter-btn active">All</button>
-          <button onclick="filterByCategory('furniture')" class="filter-btn">Furniture</button>
-          <button onclick="filterByCategory('decor')" class="filter-btn">Decor</button>
-          <button onclick="filterByCategory('kitchen')" class="filter-btn">Kitchen</button>
+          <button onclick="showAllProducts()" data-category="all" class="filter-btn active">All</button>
+          <button onclick="filterByCategory('furniture')" data-category="furniture" class="filter-btn">Furniture</button>
+          <button onclick="filterByCategory('decor')" data-category="decor" class="filter-btn">Decor</button>
+          <button onclick="filterByCategory('kitchen')" data-category="kitchen" class="filter-btn">Kitchen</button>
         </div>
       </div>
       <div id="products" class="products-grid"></div>

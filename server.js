@@ -8,7 +8,11 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/homekart';
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET is required in environment variables');
+}
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
@@ -35,8 +39,8 @@ const Product = mongoose.model('Product', {
 });
 
 const Cart = mongoose.model('Cart', {
-  userId: String,
-  productId: String,
+  userId: mongoose.Schema.Types.ObjectId,
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
   quantity: Number
 });
 
@@ -78,16 +82,83 @@ app.get('/products', async (req, res) => {
 });
 
 app.post('/cart', auth, async (req, res) => {
+  const { productId, quantity } = req.body;
+  const parsedQuantity = Number(quantity) || 1;
+
+  if (!mongoose.Types.ObjectId.isValid(productId) || parsedQuantity < 1) {
+    return res.status(400).json({ message: 'Invalid cart payload' });
+  }
+
+  const product = await Product.findById(productId);
+  if (!product) {
+    return res.status(404).json({ message: 'Product not found' });
+  }
+
+  const existingItem = await Cart.findOne({ userId: req.user.id, productId });
+  if (existingItem) {
+    existingItem.quantity += parsedQuantity;
+    await existingItem.save();
+    return res.json({ message: 'Cart updated' });
+  }
+
   await Cart.create({
     userId: req.user.id,
-    productId: req.body.productId,
-    quantity: req.body.quantity
+    productId,
+    quantity: parsedQuantity
   });
-  res.send("Added to cart");
+
+  res.json({ message: 'Added to cart' });
 });
 
 app.get('/cart', auth, async (req, res) => {
-  res.json(await Cart.find({ userId: req.user.id }));
+  const cartItems = await Cart.find({ userId: req.user.id }).populate('productId');
+
+  const response = cartItems
+    .filter(item => item.productId)
+    .map(item => ({
+      productId: item.productId._id,
+      productName: item.productId.name,
+      price: item.productId.price,
+      quantity: item.quantity
+    }));
+
+  res.json(response);
+});
+
+app.put('/cart', auth, async (req, res) => {
+  const { productId, quantity } = req.body;
+  const parsedQuantity = Number(quantity);
+
+  if (!mongoose.Types.ObjectId.isValid(productId) || !Number.isInteger(parsedQuantity) || parsedQuantity < 1) {
+    return res.status(400).json({ message: 'Invalid cart payload' });
+  }
+
+  const updatedItem = await Cart.findOneAndUpdate(
+    { userId: req.user.id, productId },
+    { quantity: parsedQuantity },
+    { new: true }
+  );
+
+  if (!updatedItem) {
+    return res.status(404).json({ message: 'Cart item not found' });
+  }
+
+  res.json({ message: 'Cart item updated' });
+});
+
+app.delete('/cart', auth, async (req, res) => {
+  const { productId } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(productId)) {
+    return res.status(400).json({ message: 'Invalid product id' });
+  }
+
+  const deletedItem = await Cart.findOneAndDelete({ userId: req.user.id, productId });
+  if (!deletedItem) {
+    return res.status(404).json({ message: 'Cart item not found' });
+  }
+
+  res.json({ message: 'Cart item removed' });
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
