@@ -17,13 +17,27 @@ fetch('/products')
 
 // Render products with filtering
 function renderProducts(products) {
+  const productsElement = document.getElementById("products");
+
+  if (!products.length) {
+    productsElement.innerHTML = `
+      <div class="empty-products">
+        <h3>No products found</h3>
+        <p>Try a different search or switch category filters.</p>
+      </div>
+    `;
+    return;
+  }
+
   let out = "";
 
-  products.forEach(p => {
+  products.forEach((p, index) => {
     out += `
-      <div class="card">
+      <div class="card reveal" style="transition-delay:${index * 60}ms">
+        <div class="card-tag">Top Pick</div>
         <h3>${p.name}</h3>
         <p class="price">₹${p.price}</p>
+        <p class="card-meta">Premium finish | 7-day easy return</p>
         <div class="card-actions">
           <div class="quantity-controls">
             <button onclick="updateQuantity('${p._id}', -1)" class="qty-btn">-</button>
@@ -36,7 +50,8 @@ function renderProducts(products) {
     `;
   });
 
-  document.getElementById("products").innerHTML = out;
+  productsElement.innerHTML = out;
+  setupRevealAnimations();
 }
 
 // Search functionality
@@ -258,6 +273,24 @@ function showNotification(message, type) {
   }, 3000);
 }
 
+function setupRevealAnimations() {
+  const revealItems = document.querySelectorAll('.reveal');
+  if (!revealItems.length) {
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.2 });
+
+  revealItems.forEach(item => observer.observe(item));
+}
+
 // Add some interactive enhancements
 document.addEventListener('DOMContentLoaded', function() {
   // Add loading animation to page
@@ -296,6 +329,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Start countdown timer
   startCountdown();
+
+  // Initial reveal animation for static sections
+  document.querySelectorAll('.category-card, .trust-item, .footer-section').forEach((item, index) => {
+    item.classList.add('reveal');
+    item.style.transitionDelay = `${index * 80}ms`;
+  });
+  setupRevealAnimations();
 
   // Update cart count periodically
   setInterval(updateCartCount, 5000);

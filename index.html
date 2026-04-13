@@ -3,9 +3,13 @@
 <head>
   <title>HomeKart - Your Home, Your Style</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
+  <div class="announcement-bar">Free doorstep delivery on orders above Rs 999. New arrivals every Friday.</div>
   <header>
     <nav>
       <a href="index.html" class="logo">🛋️ HomeKart</a>
@@ -25,6 +29,7 @@
   <!-- Hero Section -->
   <section class="hero">
     <div class="hero-content">
+      <p class="hero-kicker">Curated Living Essentials</p>
       <h1>Transform Your Home with Style</h1>
       <p>Discover premium furniture, decor, and appliances for every room in your home. Quality products at affordable prices.</p>
       <div class="hero-stats">
@@ -48,6 +53,23 @@
         <div class="shape shape-1"></div>
         <div class="shape shape-2"></div>
         <div class="shape shape-3"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="trust-strip">
+    <div class="container trust-grid">
+      <div class="trust-item">
+        <h3>48 Hour Dispatch</h3>
+        <p>Fast shipping from verified home brands across India.</p>
+      </div>
+      <div class="trust-item">
+        <h3>Secure Checkout</h3>
+        <p>Protected payments and transparent pricing at every step.</p>
+      </div>
+      <div class="trust-item">
+        <h3>Easy Returns</h3>
+        <p>7-day return support on eligible furniture and decor.</p>
       </div>
     </div>
   </section>
@@ -112,12 +134,16 @@
   <section id="products-section" class="products-section">
     <div class="container">
       <div class="section-header">
-        <h2>Featured Products</h2>
+        <div>
+          <h2>Featured Products</h2>
+          <p class="section-subtitle">Handpicked pieces that blend comfort, utility, and timeless aesthetics.</p>
+        </div>
         <div class="filter-buttons">
           <button onclick="showAllProducts()" data-category="all" class="filter-btn active">All</button>
           <button onclick="filterByCategory('furniture')" data-category="furniture" class="filter-btn">Furniture</button>
           <button onclick="filterByCategory('decor')" data-category="decor" class="filter-btn">Decor</button>
           <button onclick="filterByCategory('kitchen')" data-category="kitchen" class="filter-btn">Kitchen</button>
+          <button onclick="filterByCategory('bedroom')" data-category="bedroom" class="filter-btn">Bedroom</button>
         </div>
       </div>
       <div id="products" class="products-grid"></div>
