@@ -5,11 +5,13 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="announcement-bar">Member access unlocks saved carts, faster checkout, and order tracking.</div>
   <header>
     <nav>
       <a href="index.html" class="logo">🛋️ HomeKart</a>
       <ul class="nav-links">
         <li><a href="index.html">Home</a></li>
+        <li><a href="products.html">Products</a></li>
         <li><a href="cart.html">Cart</a></li>
         <li><a href="login.html">Login</a></li>
         <li><a href="register.html">Register</a></li>
@@ -18,6 +20,13 @@
   </header>
 
   <main>
+    <section class="auth-hero">
+      <div class="container auth-hero-content">
+        <p class="hero-kicker">Welcome Back</p>
+        <h1>Sign In to Continue Shopping</h1>
+        <p>Access your saved items, premium deals, and seamless checkout in one place.</p>
+      </div>
+    </section>
     <div class="form-container">
       <h2>Login to Your Account</h2>
       <div class="form-group">
@@ -62,10 +71,19 @@
         password: password.value
       })
     })
-    .then(res => res.json())
+    .then(async res => {
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+      return data;
+    })
     .then(data => {
       if (data.token) {
         localStorage.setItem("token", data.token);
+        if (data.user) {
+          localStorage.setItem("currentUser", JSON.stringify(data.user));
+        }
         showNotification("Login successful! Redirecting...", "success");
         setTimeout(() => {
           location = "index.html";
@@ -118,5 +136,6 @@
     });
   });
   </script>
+  <script src="auth-ui.js"></script>
 </body>
 </html>

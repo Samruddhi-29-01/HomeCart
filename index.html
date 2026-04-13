@@ -19,6 +19,7 @@
       </div>
       <ul class="nav-links">
         <li><a href="index.html">Home</a></li>
+        <li><a href="products.html">Products</a></li>
         <li><a href="cart.html">Cart <span id="cart-count" class="cart-count">0</span></a></li>
         <li><a href="login.html">Login</a></li>
         <li><a href="register.html">Register</a></li>
@@ -46,7 +47,7 @@
           <span class="stat-label">Rating</span>
         </div>
       </div>
-      <a href="#products" class="btn hero-cta">Shop Now</a>
+      <a href="products.html" class="btn hero-cta">Shop Now</a>
     </div>
     <div class="hero-image">
       <div class="hero-shapes">
@@ -79,22 +80,22 @@
     <div class="container">
       <h2>Shop by Category</h2>
       <div class="category-grid">
-        <div class="category-card" onclick="filterByCategory('furniture')">
+        <div class="category-card" onclick="openCatalog('furniture')">
           <div class="category-icon">🪑</div>
           <h3>Furniture</h3>
           <p>Chairs, tables, sofas & more</p>
         </div>
-        <div class="category-card" onclick="filterByCategory('decor')">
+        <div class="category-card" onclick="openCatalog('decor')">
           <div class="category-icon">🏺</div>
           <h3>Home Decor</h3>
           <p>Lamps, vases, wall art</p>
         </div>
-        <div class="category-card" onclick="filterByCategory('kitchen')">
+        <div class="category-card" onclick="openCatalog('kitchen')">
           <div class="category-icon">🍳</div>
           <h3>Kitchen</h3>
           <p>Appliances & utensils</p>
         </div>
-        <div class="category-card" onclick="filterByCategory('bedroom')">
+        <div class="category-card" onclick="openCatalog('bedroom')">
           <div class="category-icon">🛏️</div>
           <h3>Bedroom</h3>
           <p>Beds, mattresses, storage</p>
@@ -124,29 +125,23 @@
               <span id="minutes" class="time-number">30</span>
               <span class="time-label">Min</span>
             </div>
+            <div class="time-block">
+              <span id="seconds" class="time-number">45</span>
+              <span class="time-label">Sec</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Products Section -->
-  <section id="products-section" class="products-section">
-    <div class="container">
-      <div class="section-header">
-        <div>
-          <h2>Featured Products</h2>
-          <p class="section-subtitle">Handpicked pieces that blend comfort, utility, and timeless aesthetics.</p>
-        </div>
-        <div class="filter-buttons">
-          <button onclick="showAllProducts()" data-category="all" class="filter-btn active">All</button>
-          <button onclick="filterByCategory('furniture')" data-category="furniture" class="filter-btn">Furniture</button>
-          <button onclick="filterByCategory('decor')" data-category="decor" class="filter-btn">Decor</button>
-          <button onclick="filterByCategory('kitchen')" data-category="kitchen" class="filter-btn">Kitchen</button>
-          <button onclick="filterByCategory('bedroom')" data-category="bedroom" class="filter-btn">Bedroom</button>
-        </div>
+  <section class="products-preview">
+    <div class="container preview-inner">
+      <div>
+        <h2>Explore the Full Product Gallery</h2>
+        <p class="section-subtitle">Browse curated furniture, decor, kitchen essentials, and bedroom upgrades with advanced filters.</p>
       </div>
-      <div id="products" class="products-grid"></div>
+      <a href="products.html" class="btn">Browse All Products</a>
     </div>
   </section>
 
@@ -181,6 +176,7 @@
           <h4>Quick Links</h4>
           <ul>
             <li><a href="index.html">Home</a></li>
+            <li><a href="products.html">Products</a></li>
             <li><a href="cart.html">Cart</a></li>
             <li><a href="login.html">Login</a></li>
             <li><a href="register.html">Register</a></li>
@@ -189,10 +185,10 @@
         <div class="footer-section">
           <h4>Categories</h4>
           <ul>
-            <li><a href="#" onclick="filterByCategory('furniture')">Furniture</a></li>
-            <li><a href="#" onclick="filterByCategory('decor')">Home Decor</a></li>
-            <li><a href="#" onclick="filterByCategory('kitchen')">Kitchen</a></li>
-            <li><a href="#" onclick="filterByCategory('bedroom')">Bedroom</a></li>
+            <li><a href="products.html?category=furniture">Furniture</a></li>
+            <li><a href="products.html?category=decor">Home Decor</a></li>
+            <li><a href="products.html?category=kitchen">Kitchen</a></li>
+            <li><a href="products.html?category=bedroom">Bedroom</a></li>
           </ul>
         </div>
         <div class="footer-section">
@@ -212,5 +208,6 @@
   </footer>
 
   <script src="script.js"></script>
+  <script src="auth-ui.js"></script>
 </body>
 </html>
