@@ -10,6 +10,7 @@
       <a href="index.html" class="logo">🛋️ HomeKart</a>
       <ul class="nav-links">
         <li><a href="index.html">Home</a></li>
+        <li><a href="products.html">Products</a></li>
         <li><a href="cart.html">Cart</a></li>
         <li><a href="login.html">Login</a></li>
         <li><a href="register.html">Register</a></li>
@@ -26,12 +27,23 @@
   let cartData = [];
 
   function loadCart() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      document.getElementById("cart").innerHTML = "<p class='error-message'>Please login to view your cart.</p>";
+      return;
+    }
+
     fetch('/cart', {
       headers: {
-        Authorization: localStorage.getItem("token")
+        Authorization: token
       }
     })
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) {
+        throw new Error('Unable to load cart');
+      }
+      return res.json();
+    })
     .then(data => {
       cartData = data;
       renderCart();
@@ -60,14 +72,15 @@
     let total = 0;
 
     cartData.forEach((item, index) => {
-      const itemTotal = item.price * item.quantity;
+      const unitPrice = Number(item.price) || 0;
+      const itemTotal = unitPrice * item.quantity;
       total += itemTotal;
 
       out += `
         <div class="cart-item">
           <div class="item-info">
-            <h4>${item.productId}</h4>
-            <p class="price">₹${item.price} each</p>
+            <h4>${item.productName}</h4>
+            <p class="price">₹${unitPrice} each</p>
           </div>
           <div class="quantity-controls">
             <button onclick="updateCartQuantity(${index}, -1)" class="qty-btn">-</button>
@@ -160,8 +173,7 @@
   }
 
   function checkout() {
-    // Placeholder for checkout functionality
-    showNotification("Checkout functionality coming soon!", "success");
+    location.href = 'payment.html';
   }
 
   function showNotification(message, type) {
@@ -178,5 +190,6 @@
   // Load cart on page load
   loadCart();
   </script>
+  <script src="auth-ui.js"></script>
 </body>
 </html>

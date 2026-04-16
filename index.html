@@ -3,9 +3,13 @@
 <head>
   <title>HomeKart - Your Home, Your Style</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
+  <div class="announcement-bar">Free doorstep delivery on orders above Rs 999. New arrivals every Friday.</div>
   <header>
     <nav>
       <a href="index.html" class="logo">🛋️ HomeKart</a>
@@ -15,6 +19,7 @@
       </div>
       <ul class="nav-links">
         <li><a href="index.html">Home</a></li>
+        <li><a href="products.html">Products</a></li>
         <li><a href="cart.html">Cart <span id="cart-count" class="cart-count">0</span></a></li>
         <li><a href="login.html">Login</a></li>
         <li><a href="register.html">Register</a></li>
@@ -25,6 +30,7 @@
   <!-- Hero Section -->
   <section class="hero">
     <div class="hero-content">
+      <p class="hero-kicker">Curated Living Essentials</p>
       <h1>Transform Your Home with Style</h1>
       <p>Discover premium furniture, decor, and appliances for every room in your home. Quality products at affordable prices.</p>
       <div class="hero-stats">
@@ -41,7 +47,7 @@
           <span class="stat-label">Rating</span>
         </div>
       </div>
-      <a href="#products" class="btn hero-cta">Shop Now</a>
+      <a href="products.html" class="btn hero-cta">Shop Now</a>
     </div>
     <div class="hero-image">
       <div class="hero-shapes">
@@ -52,27 +58,44 @@
     </div>
   </section>
 
+  <section class="trust-strip">
+    <div class="container trust-grid">
+      <div class="trust-item">
+        <h3>48 Hour Dispatch</h3>
+        <p>Fast shipping from verified home brands across India.</p>
+      </div>
+      <div class="trust-item">
+        <h3>Secure Checkout</h3>
+        <p>Protected payments and transparent pricing at every step.</p>
+      </div>
+      <div class="trust-item">
+        <h3>Easy Returns</h3>
+        <p>7-day return support on eligible furniture and decor.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- Categories Section -->
   <section class="categories">
     <div class="container">
       <h2>Shop by Category</h2>
       <div class="category-grid">
-        <div class="category-card" onclick="filterByCategory('furniture')">
+        <div class="category-card" onclick="openCatalog('furniture')">
           <div class="category-icon">🪑</div>
           <h3>Furniture</h3>
           <p>Chairs, tables, sofas & more</p>
         </div>
-        <div class="category-card" onclick="filterByCategory('decor')">
+        <div class="category-card" onclick="openCatalog('decor')">
           <div class="category-icon">🏺</div>
           <h3>Home Decor</h3>
           <p>Lamps, vases, wall art</p>
         </div>
-        <div class="category-card" onclick="filterByCategory('kitchen')">
+        <div class="category-card" onclick="openCatalog('kitchen')">
           <div class="category-icon">🍳</div>
           <h3>Kitchen</h3>
           <p>Appliances & utensils</p>
         </div>
-        <div class="category-card" onclick="filterByCategory('bedroom')">
+        <div class="category-card" onclick="openCatalog('bedroom')">
           <div class="category-icon">🛏️</div>
           <h3>Bedroom</h3>
           <p>Beds, mattresses, storage</p>
@@ -102,25 +125,23 @@
               <span id="minutes" class="time-number">30</span>
               <span class="time-label">Min</span>
             </div>
+            <div class="time-block">
+              <span id="seconds" class="time-number">45</span>
+              <span class="time-label">Sec</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Products Section -->
-  <section id="products-section" class="products-section">
-    <div class="container">
-      <div class="section-header">
-        <h2>Featured Products</h2>
-        <div class="filter-buttons">
-          <button onclick="showAllProducts()" class="filter-btn active">All</button>
-          <button onclick="filterByCategory('furniture')" class="filter-btn">Furniture</button>
-          <button onclick="filterByCategory('decor')" class="filter-btn">Decor</button>
-          <button onclick="filterByCategory('kitchen')" class="filter-btn">Kitchen</button>
-        </div>
+  <section class="products-preview">
+    <div class="container preview-inner">
+      <div>
+        <h2>Explore the Full Product Gallery</h2>
+        <p class="section-subtitle">Browse curated furniture, decor, kitchen essentials, and bedroom upgrades with advanced filters.</p>
       </div>
-      <div id="products" class="products-grid"></div>
+      <a href="products.html" class="btn">Browse All Products</a>
     </div>
   </section>
 
@@ -155,6 +176,7 @@
           <h4>Quick Links</h4>
           <ul>
             <li><a href="index.html">Home</a></li>
+            <li><a href="products.html">Products</a></li>
             <li><a href="cart.html">Cart</a></li>
             <li><a href="login.html">Login</a></li>
             <li><a href="register.html">Register</a></li>
@@ -163,10 +185,10 @@
         <div class="footer-section">
           <h4>Categories</h4>
           <ul>
-            <li><a href="#" onclick="filterByCategory('furniture')">Furniture</a></li>
-            <li><a href="#" onclick="filterByCategory('decor')">Home Decor</a></li>
-            <li><a href="#" onclick="filterByCategory('kitchen')">Kitchen</a></li>
-            <li><a href="#" onclick="filterByCategory('bedroom')">Bedroom</a></li>
+            <li><a href="products.html?category=furniture">Furniture</a></li>
+            <li><a href="products.html?category=decor">Home Decor</a></li>
+            <li><a href="products.html?category=kitchen">Kitchen</a></li>
+            <li><a href="products.html?category=bedroom">Bedroom</a></li>
           </ul>
         </div>
         <div class="footer-section">
@@ -186,5 +208,6 @@
   </footer>
 
   <script src="script.js"></script>
+  <script src="auth-ui.js"></script>
 </body>
 </html>

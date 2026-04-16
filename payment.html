@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Payment - HomeKart</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div class="announcement-bar">Secure demo checkout | Fake payment mode for project use only.</div>
+
+  <header>
+    <nav>
+      <a href="index.html" class="logo">🛋️ HomeKart</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="products.html">Products</a></li>
+        <li><a href="cart.html">Cart</a></li>
+        <li><a href="login.html">Login</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="auth-hero">
+      <div class="container auth-hero-content">
+        <p class="hero-kicker">Checkout</p>
+        <h1>Complete Your Payment</h1>
+        <p>This is a demo payment gateway with test-only validation. No real payment is charged.</p>
+      </div>
+    </section>
+
+    <section class="payment-layout container">
+      <div class="payment-card">
+        <h2>Card Details</h2>
+        <div class="form-group">
+          <input id="cardName" type="text" placeholder="Cardholder Name" required>
+        </div>
+        <div class="form-group">
+          <input id="cardNumber" type="text" inputmode="numeric" maxlength="19" placeholder="Card Number (16 digits)">
+        </div>
+        <div class="split-fields">
+          <div class="form-group">
+            <input id="expiry" type="text" maxlength="5" placeholder="MM/YY">
+          </div>
+          <div class="form-group">
+            <input id="cvv" type="password" inputmode="numeric" maxlength="3" placeholder="CVV">
+          </div>
+        </div>
+        <button id="payNowBtn" class="btn">Pay Now</button>
+        <p class="payment-note">Try sample card number 4242 4242 4242 4242</p>
+      </div>
+
+      <div class="order-card">
+        <h3>Order Summary</h3>
+        <div id="paymentItems" class="summary-items"></div>
+        <div class="summary-total">
+          <span>Total</span>
+          <strong id="paymentTotal">₹0</strong>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+  let currentTotal = 0;
+
+  function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => notification.remove(), 3000);
+  }
+
+  function loadSummary() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showNotification('Please login before checkout', 'error');
+      setTimeout(() => { location.href = 'login.html'; }, 1200);
+      return;
+    }
+
+    fetch('/cart', {
+      headers: { Authorization: token }
+    })
+    .then(async (res) => {
+      const data = await res.json().catch(() => []);
+      if (!res.ok) {
+        throw new Error(data.message || 'Unable to load cart');
+      }
+      return data;
+    })
+    .then((items) => {
+      if (!items.length) {
+        showNotification('Your cart is empty', 'error');
+        setTimeout(() => { location.href = 'cart.html'; }, 1200);
+        return;
+      }
+
+      const list = document.getElementById('paymentItems');
+      currentTotal = 0;
+      list.innerHTML = items.map((item) => {
+        const lineTotal = Number(item.price) * Number(item.quantity);
+        currentTotal += lineTotal;
+        return `<div class="summary-line"><span>${item.productName} x ${item.quantity}</span><span>₹${lineTotal}</span></div>`;
+      }).join('');
+
+      document.getElementById('paymentTotal').textContent = `₹${currentTotal}`;
+    })
+    .catch((error) => {
+      showNotification(error.message || 'Unable to load summary', 'error');
+    });
+  }
+
+  function validatePaymentForm() {
+    const cardName = document.getElementById('cardName').value.trim();
+    const cardNumber = document.getElementById('cardNumber').value.replace(/\s+/g, '');
+    const expiry = document.getElementById('expiry').value.trim();
+    const cvv = document.getElementById('cvv').value.trim();
+
+    if (!cardName || cardName.length < 2) {
+      throw new Error('Enter a valid cardholder name');
+    }
+
+    if (!/^\d{16}$/.test(cardNumber)) {
+      throw new Error('Enter a valid 16-digit card number');
+    }
+
+    if (!/^(0[1-9]|1[0-2])\/[0-9]{2}$/.test(expiry)) {
+      throw new Error('Enter expiry in MM/YY format');
+    }
+
+    if (!/^\d{3}$/.test(cvv)) {
+      throw new Error('Enter a valid 3-digit CVV');
+    }
+  }
+
+  function processPayment() {
+    const button = document.getElementById('payNowBtn');
+
+    try {
+      validatePaymentForm();
+    } catch (error) {
+      showNotification(error.message, 'error');
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = 'Processing...';
+
+    fetch('/checkout', {
+      method: 'POST',
+      headers: {
+        Authorization: localStorage.getItem('token')
+      }
+    })
+    .then(async (res) => {
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || 'Payment failed');
+      }
+      return data;
+    })
+    .then((data) => {
+      showNotification(`Payment successful! Order ${data.orderId}`, 'success');
+      setTimeout(() => {
+        location.href = 'products.html';
+      }, 1500);
+    })
+    .catch((error) => {
+      showNotification(error.message || 'Payment failed', 'error');
+      button.disabled = false;
+      button.textContent = 'Pay Now';
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadSummary();
+
+    const cardNumber = document.getElementById('cardNumber');
+    cardNumber.addEventListener('input', () => {
+      cardNumber.value = cardNumber.value
+        .replace(/\D/g, '')
+        .replace(/(.{4})/g, '$1 ')
+        .trim();
+    });
+
+    const expiry = document.getElementById('expiry');
+    expiry.addEventListener('input', () => {
+      const raw = expiry.value.replace(/\D/g, '').slice(0, 4);
+      expiry.value = raw.length > 2 ? `${raw.slice(0, 2)}/${raw.slice(2)}` : raw;
+    });
+
+    document.getElementById('payNowBtn').addEventListener('click', processPayment);
+  });
+  </script>
+  <script src="auth-ui.js"></script>
+</body>
+</html>
