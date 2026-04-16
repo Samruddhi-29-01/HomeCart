@@ -1,5 +1,4 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
@@ -9,12 +8,10 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/homekart';
 const JWT_SECRET = process.env.JWT_SECRET;
 const SQLITE_DB_PATH = path.join(__dirname, 'homekart.sqlite');
 
 let dbReady = false;
-let storageMode = 'mongo';
 let sqliteDb = null;
 
 if (!JWT_SECRET) {
@@ -37,44 +34,6 @@ app.use(express.static(path.join(__dirname)));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-const User = mongoose.model('User', {
-  name: String,
-  email: { type: String, unique: true },
-  password: String
-});
-
-const Product = mongoose.model('Product', {
-  name: String,
-  price: Number,
-  category: String
-});
-
-const Cart = mongoose.model('Cart', {
-  userId: mongoose.Schema.Types.ObjectId,
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
-  quantity: Number
-});
-
-const Order = mongoose.model('Order', {
-  userId: mongoose.Schema.Types.ObjectId,
-  items: [
-    {
-      productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
-      productName: String,
-      price: Number,
-      quantity: Number
-    }
-  ],
-  totalAmount: Number,
-  status: { type: String, default: 'confirmed' },
-  createdAt: { type: Date, default: Date.now }
-});
-
-const NewsletterSubscriber = mongoose.model('NewsletterSubscriber', {
-  email: { type: String, unique: true },
-  createdAt: { type: Date, default: Date.now }
 });
 
 function sqliteRun(sql, params = []) {
@@ -102,13 +61,6 @@ function sqliteAll(sql, params = []) {
       resolve(rows);
     });
   });
-}
-
-async function seedInitialProductsMongo() {
-  const count = await Product.countDocuments();
-  if (count > 0) return;
-  await Product.insertMany(initialProducts);
-  console.log('Seeded initial product catalog (MongoDB).');
 }
 
 async function seedInitialProductsSqlite() {
@@ -196,18 +148,12 @@ async function initSqlite() {
 
 async function connectDatabase() {
   try {
-    await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
-    storageMode = 'mongo';
-    dbReady = true;
-    console.log('Connected to MongoDB');
-    await seedInitialProductsMongo();
-  } catch (err) {
-    console.error('MongoDB connection error:', err.message);
-    console.log('Falling back to SQLite...');
     await initSqlite();
-    storageMode = 'sqlite';
     dbReady = true;
     console.log(`Connected to SQLite at ${SQLITE_DB_PATH}`);
+  } catch (err) {
+    console.error('Database initialization error:', err.message);
+    process.exit(1);
   }
 }
 
@@ -247,16 +193,6 @@ app.post('/register', ensureDatabaseReady, asyncHandler(async (req, res) => {
 
   const hash = await bcrypt.hash(password, 10);
 
-  if (storageMode === 'mongo') {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(409).json({ message: 'Email already registered' });
-    }
-
-    await User.create({ name, email, password: hash });
-    return res.json({ message: 'Registered' });
-  }
-
   const existingUser = await sqliteGet('SELECT id FROM users WHERE email = ?', [email]);
   if (existingUser) {
     return res.status(409).json({ message: 'Email already registered' });
@@ -276,13 +212,7 @@ app.post('/login', ensureDatabaseReady, asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'Email and password are required' });
   }
 
-  let user = null;
-
-  if (storageMode === 'mongo') {
-    user = await User.findOne({ email });
-  } else {
-    user = await sqliteGet('SELECT id, email, password FROM users WHERE email = ?', [email]);
-  }
+  const user = await sqliteGet('SELECT id, email, password FROM users WHERE email = ?', [email]);
 
   if (!user) {
     return res.status(401).json({ message: 'Invalid email or password' });
@@ -293,12 +223,12 @@ app.post('/login', ensureDatabaseReady, asyncHandler(async (req, res) => {
     return res.status(401).json({ message: 'Invalid email or password' });
   }
 
-  const token = jwt.sign({ id: String(user._id || user.id) }, JWT_SECRET);
+  const token = jwt.sign({ id: user.id }, JWT_SECRET);
 
   return res.json({
     token,
     user: {
-      id: String(user._id || user.id),
+      id: user.id,
       name: user.name || 'User',
       email: user.email
     }
@@ -306,19 +236,6 @@ app.post('/login', ensureDatabaseReady, asyncHandler(async (req, res) => {
 }));
 
 app.get('/me', ensureDatabaseReady, auth, asyncHandler(async (req, res) => {
-  if (storageMode === 'mongo') {
-    const user = await User.findById(req.user.id).select('name email');
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    return res.json({
-      id: String(user._id),
-      name: user.name,
-      email: user.email
-    });
-  }
-
   const user = await sqliteGet('SELECT id, name, email FROM users WHERE id = ?', [req.user.id]);
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
@@ -333,11 +250,6 @@ app.post('/product', ensureDatabaseReady, asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'Name, price, and category are required' });
   }
 
-  if (storageMode === 'mongo') {
-    await Product.create({ name, price, category });
-    return res.json({ message: 'Product added' });
-  }
-
   await sqliteRun(
     'INSERT INTO products (id, name, price, category) VALUES (?, ?, ?, ?)',
     [crypto.randomUUID(), name, Number(price), category]
@@ -347,10 +259,6 @@ app.post('/product', ensureDatabaseReady, asyncHandler(async (req, res) => {
 }));
 
 app.get('/products', ensureDatabaseReady, asyncHandler(async (req, res) => {
-  if (storageMode === 'mongo') {
-    return res.json(await Product.find());
-  }
-
   const rows = await sqliteAll('SELECT id, name, price, category FROM products ORDER BY rowid DESC');
   return res.json(rows.map((row) => ({
     _id: row.id,
@@ -366,27 +274,6 @@ app.post('/cart', ensureDatabaseReady, auth, asyncHandler(async (req, res) => {
 
   if (!productId || parsedQuantity < 1) {
     return res.status(400).json({ message: 'Invalid cart payload' });
-  }
-
-  if (storageMode === 'mongo') {
-    if (!mongoose.Types.ObjectId.isValid(productId)) {
-      return res.status(400).json({ message: 'Invalid cart payload' });
-    }
-
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-
-    const existingItem = await Cart.findOne({ userId: req.user.id, productId });
-    if (existingItem) {
-      existingItem.quantity += parsedQuantity;
-      await existingItem.save();
-      return res.json({ message: 'Cart updated' });
-    }
-
-    await Cart.create({ userId: req.user.id, productId, quantity: parsedQuantity });
-    return res.json({ message: 'Added to cart' });
   }
 
   const product = await sqliteGet('SELECT id FROM products WHERE id = ?', [productId]);
@@ -416,20 +303,6 @@ app.post('/cart', ensureDatabaseReady, auth, asyncHandler(async (req, res) => {
 }));
 
 app.get('/cart', ensureDatabaseReady, auth, asyncHandler(async (req, res) => {
-  if (storageMode === 'mongo') {
-    const cartItems = await Cart.find({ userId: req.user.id }).populate('productId');
-    const response = cartItems
-      .filter((item) => item.productId)
-      .map((item) => ({
-        productId: String(item.productId._id),
-        productName: item.productId.name,
-        price: item.productId.price,
-        quantity: item.quantity
-      }));
-
-    return res.json(response);
-  }
-
   const rows = await sqliteAll(
     `SELECT c.product_id AS productId, p.name AS productName, p.price AS price, c.quantity AS quantity
      FROM cart_items c
@@ -447,24 +320,6 @@ app.put('/cart', ensureDatabaseReady, auth, asyncHandler(async (req, res) => {
 
   if (!productId || !Number.isInteger(parsedQuantity) || parsedQuantity < 1) {
     return res.status(400).json({ message: 'Invalid cart payload' });
-  }
-
-  if (storageMode === 'mongo') {
-    if (!mongoose.Types.ObjectId.isValid(productId)) {
-      return res.status(400).json({ message: 'Invalid cart payload' });
-    }
-
-    const updatedItem = await Cart.findOneAndUpdate(
-      { userId: req.user.id, productId },
-      { quantity: parsedQuantity },
-      { new: true }
-    );
-
-    if (!updatedItem) {
-      return res.status(404).json({ message: 'Cart item not found' });
-    }
-
-    return res.json({ message: 'Cart item updated' });
   }
 
   const updated = await sqliteRun(
@@ -486,19 +341,6 @@ app.delete('/cart', ensureDatabaseReady, auth, asyncHandler(async (req, res) => 
     return res.status(400).json({ message: 'Invalid product id' });
   }
 
-  if (storageMode === 'mongo') {
-    if (!mongoose.Types.ObjectId.isValid(productId)) {
-      return res.status(400).json({ message: 'Invalid product id' });
-    }
-
-    const deletedItem = await Cart.findOneAndDelete({ userId: req.user.id, productId });
-    if (!deletedItem) {
-      return res.status(404).json({ message: 'Cart item not found' });
-    }
-
-    return res.json({ message: 'Cart item removed' });
-  }
-
   const removed = await sqliteRun(
     'DELETE FROM cart_items WHERE user_id = ? AND product_id = ?',
     [req.user.id, productId]
@@ -512,39 +354,6 @@ app.delete('/cart', ensureDatabaseReady, auth, asyncHandler(async (req, res) => 
 }));
 
 app.post('/checkout', ensureDatabaseReady, auth, asyncHandler(async (req, res) => {
-  if (storageMode === 'mongo') {
-    const cartItems = await Cart.find({ userId: req.user.id }).populate('productId');
-    if (!cartItems.length) {
-      return res.status(400).json({ message: 'Cart is empty' });
-    }
-
-    const orderItems = cartItems
-      .filter((item) => item.productId)
-      .map((item) => ({
-        productId: String(item.productId._id),
-        productName: item.productId.name,
-        price: item.productId.price,
-        quantity: item.quantity
-      }));
-
-    const totalAmount = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-    const order = await Order.create({
-      userId: req.user.id,
-      items: orderItems,
-      totalAmount,
-      status: 'confirmed'
-    });
-
-    await Cart.deleteMany({ userId: req.user.id });
-
-    return res.json({
-      message: 'Order placed successfully',
-      orderId: String(order._id),
-      totalAmount: order.totalAmount
-    });
-  }
-
   const orderItems = await sqliteAll(
     `SELECT c.product_id AS productId, p.name AS productName, p.price AS price, c.quantity AS quantity
      FROM cart_items c
@@ -574,20 +383,32 @@ app.post('/checkout', ensureDatabaseReady, auth, asyncHandler(async (req, res) =
   });
 }));
 
+app.get('/orders', ensureDatabaseReady, auth, asyncHandler(async (req, res) => {
+  const rows = await sqliteAll(
+    'SELECT id, total_amount, status, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC',
+    [req.user.id]
+  );
+
+  return res.json(rows);
+}));
+
+app.get('/orders/:id', ensureDatabaseReady, auth, asyncHandler(async (req, res) => {
+  const order = await sqliteGet('SELECT * FROM orders WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+
+  if (!order) {
+    return res.status(404).json({ message: 'Order not found' });
+  }
+
+  return res.json({
+    ...order,
+    items: JSON.parse(order.items_json)
+  });
+}));
+
 app.post('/newsletter', ensureDatabaseReady, asyncHandler(async (req, res) => {
   const email = (req.body.email || '').trim().toLowerCase();
   if (!email) {
     return res.status(400).json({ message: 'Email is required' });
-  }
-
-  if (storageMode === 'mongo') {
-    const exists = await NewsletterSubscriber.findOne({ email });
-    if (exists) {
-      return res.status(200).json({ message: 'Already subscribed' });
-    }
-
-    await NewsletterSubscriber.create({ email });
-    return res.json({ message: 'Subscription successful' });
   }
 
   const exists = await sqliteGet('SELECT email FROM newsletter_subscribers WHERE email = ?', [email]);
@@ -606,7 +427,6 @@ app.post('/newsletter', ensureDatabaseReady, asyncHandler(async (req, res) => {
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
-    storageMode,
     dbReady
   });
 });
@@ -619,7 +439,7 @@ app.use((err, req, res, next) => {
 connectDatabase()
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT} (storage: ${storageMode})`);
+      console.log(`Server running on port ${PORT}`);
     });
   })
   .catch((err) => {

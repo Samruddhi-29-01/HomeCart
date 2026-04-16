@@ -14,7 +14,7 @@ Your Home, Your Style - A modern e-commerce platform for home essentials.
 ## Tech Stack
 
 - **Backend**: Node.js, Express.js
-- **Database**: MongoDB
+- **Database**: SQLite
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
 - **Authentication**: JWT (JSON Web Tokens)
 - **Containerization**: Docker & Docker Compose

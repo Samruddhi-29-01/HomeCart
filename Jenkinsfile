@@ -21,46 +21,20 @@ pipeline {
       }
     }
 
-    stage('Install Dependencies') {
+    stage('Clean Up Old Images') {
       steps {
         script {
-          echo 'Installing dependencies using Node.js Docker image...'
+          echo 'Cleaning up old Docker images...'
           if (isUnix()) {
             sh '''
-              rm -rf node_modules package-lock.json
-              docker run --rm -v ${WORKSPACE}:/app -w /app node:20-alpine \
-              sh -c 'if [ -f package-lock.json ]; then npm ci; else npm install; fi'
+              docker rmi -f $(docker images "${DOCKER_IMAGE}" --quiet) || true
+              docker system prune -f || true
             '''
           } else {
             bat '''
-              if exist node_modules rmdir /s /q node_modules
-              if exist package-lock.json del package-lock.json
-              docker run --rm -v %WORKSPACE%:/app -w /app --user root node:20-alpine ^
-              sh -c "npm install"
+              for /F "tokens=*" %%i in ('docker images "%DOCKER_IMAGE%" --quiet') do docker rmi -f %%i
+              docker system prune -f || exit /b 0
             '''
-          }
-        }
-      }
-    }
-
-    stage('Run Tests (if available)') {
-      steps {
-        script {
-          def hasTestScript = false
-          if (isUnix()) {
-            hasTestScript = (sh(script: "docker run --rm -v ${WORKSPACE}:/app -w /app node:20-alpine node -e \"const p=require('./package.json'); process.exit(p.scripts && p.scripts.test ? 0 : 1)\"", returnStatus: true) == 0)
-          } else {
-            hasTestScript = (bat(script: "docker run --rm -v %WORKSPACE%:/app -w /app --user root node:20-alpine node -e \"const p=require('./package.json'); process.exit(p.scripts && p.scripts.test ? 0 : 1)\"", returnStatus: true) == 0)
-          }
-
-          if (hasTestScript) {
-            if (isUnix()) {
-              sh 'docker run --rm -v ${WORKSPACE}:/app -w /app node:20-alpine npm test'
-            } else {
-              bat 'docker run --rm -v %WORKSPACE%:/app -w /app --user root node:20-alpine npm test'
-            }
-          } else {
-            echo 'No test script found in package.json. Skipping tests.'
           }
         }
       }
@@ -72,11 +46,14 @@ pipeline {
           def imageTag = "${env.DOCKER_IMAGE}:${env.BUILD_NUMBER}"
           def latestTag = "${env.DOCKER_IMAGE}:latest"
 
+          echo "Building Docker image: ${imageTag} and ${latestTag}..."
           if (isUnix()) {
             sh "docker build -t ${imageTag} -t ${latestTag} ."
           } else {
             bat "docker build -t ${imageTag} -t ${latestTag} ."
           }
+          
+          echo "Docker image built successfully!"
         }
       }
     }
