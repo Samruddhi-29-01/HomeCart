@@ -27,13 +27,15 @@ pipeline {
           echo 'Installing dependencies using Node.js Docker image...'
           if (isUnix()) {
             sh '''
+              rm -rf node_modules package-lock.json
               docker run --rm -v ${WORKSPACE}:/app -w /app node:20-alpine \
-              sh -c 'if [ -f package-lock.json ]; then npm ci --force; else npm install; fi'
+              sh -c 'if [ -f package-lock.json ]; then npm ci; else npm install; fi'
             '''
           } else {
             bat '''
+              if exist node_modules rmdir /s /q node_modules
               docker run --rm -v %WORKSPACE%:/app -w /app --user root node:20-alpine ^
-              sh -c "if [ -f package-lock.json ]; then npm ci --force; else npm install; fi"
+              sh -c "npm install"
             '''
           }
         }

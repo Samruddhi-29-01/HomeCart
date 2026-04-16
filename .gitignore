@@ -29,3 +29,31 @@ build/
 Thumbs.db
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+.sublime-project
+.sublime-workspace
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.eslintcache
+.prettierignore
+
+# Package manager lock files (if using npm ci)
+package-lock.json
+yarn.lock
+.pnpm-lock.yaml
