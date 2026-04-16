@@ -34,6 +34,7 @@ pipeline {
           } else {
             bat '''
               if exist node_modules rmdir /s /q node_modules
+              if exist package-lock.json del package-lock.json
               docker run --rm -v %WORKSPACE%:/app -w /app --user root node:20-alpine ^
               sh -c "npm install"
             '''
