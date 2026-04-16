@@ -24,10 +24,17 @@ pipeline {
     stage('Install Dependencies') {
       steps {
         script {
+          echo 'Installing dependencies using Node.js Docker image...'
           if (isUnix()) {
-            sh 'if [ -f package-lock.json ]; then npm ci; else npm install; fi'
+            sh '''
+              docker run --rm -v ${WORKSPACE}:/app -w /app node:18-alpine \
+              sh -c 'if [ -f package-lock.json ]; then npm ci; else npm install; fi'
+            '''
           } else {
-            bat 'if exist package-lock.json (npm ci) else (npm install)'
+            bat '''
+              docker run --rm -v %WORKSPACE%:/app -w /app node:18-alpine ^
+              sh -c "if [ -f package-lock.json ]; then npm ci; else npm install; fi"
+            '''
           }
         }
       }
@@ -38,16 +45,16 @@ pipeline {
         script {
           def hasTestScript = false
           if (isUnix()) {
-            hasTestScript = (sh(script: "node -e \"const p=require('./package.json'); process.exit(p.scripts && p.scripts.test ? 0 : 1)\"", returnStatus: true) == 0)
+            hasTestScript = (sh(script: "docker run --rm -v ${WORKSPACE}:/app -w /app node:18-alpine node -e \"const p=require('./package.json'); process.exit(p.scripts && p.scripts.test ? 0 : 1)\"", returnStatus: true) == 0)
           } else {
-            hasTestScript = (bat(script: "node -e \"const p=require('./package.json'); process.exit(p.scripts && p.scripts.test ? 0 : 1)\"", returnStatus: true) == 0)
+            hasTestScript = (bat(script: "docker run --rm -v %WORKSPACE%:/app -w /app node:18-alpine node -e \"const p=require('./package.json'); process.exit(p.scripts && p.scripts.test ? 0 : 1)\"", returnStatus: true) == 0)
           }
 
           if (hasTestScript) {
             if (isUnix()) {
-              sh 'npm test'
+              sh 'docker run --rm -v ${WORKSPACE}:/app -w /app node:18-alpine npm test'
             } else {
-              bat 'npm test'
+              bat 'docker run --rm -v %WORKSPACE%:/app -w /app node:18-alpine npm test'
             }
           } else {
             echo 'No test script found in package.json. Skipping tests.'
