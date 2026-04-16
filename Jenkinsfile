@@ -27,13 +27,13 @@ pipeline {
           echo 'Installing dependencies using Node.js Docker image...'
           if (isUnix()) {
             sh '''
-              docker run --rm -v ${WORKSPACE}:/app -w /app node:18-alpine \
-              sh -c 'if [ -f package-lock.json ]; then npm ci; else npm install; fi'
+              docker run --rm -v ${WORKSPACE}:/app -w /app node:20-alpine \
+              sh -c 'if [ -f package-lock.json ]; then npm ci --force; else npm install; fi'
             '''
           } else {
             bat '''
-              docker run --rm -v %WORKSPACE%:/app -w /app node:18-alpine ^
-              sh -c "if [ -f package-lock.json ]; then npm ci; else npm install; fi"
+              docker run --rm -v %WORKSPACE%:/app -w /app --user root node:20-alpine ^
+              sh -c "if [ -f package-lock.json ]; then npm ci --force; else npm install; fi"
             '''
           }
         }
@@ -45,16 +45,16 @@ pipeline {
         script {
           def hasTestScript = false
           if (isUnix()) {
-            hasTestScript = (sh(script: "docker run --rm -v ${WORKSPACE}:/app -w /app node:18-alpine node -e \"const p=require('./package.json'); process.exit(p.scripts && p.scripts.test ? 0 : 1)\"", returnStatus: true) == 0)
+            hasTestScript = (sh(script: "docker run --rm -v ${WORKSPACE}:/app -w /app node:20-alpine node -e \"const p=require('./package.json'); process.exit(p.scripts && p.scripts.test ? 0 : 1)\"", returnStatus: true) == 0)
           } else {
-            hasTestScript = (bat(script: "docker run --rm -v %WORKSPACE%:/app -w /app node:18-alpine node -e \"const p=require('./package.json'); process.exit(p.scripts && p.scripts.test ? 0 : 1)\"", returnStatus: true) == 0)
+            hasTestScript = (bat(script: "docker run --rm -v %WORKSPACE%:/app -w /app --user root node:20-alpine node -e \"const p=require('./package.json'); process.exit(p.scripts && p.scripts.test ? 0 : 1)\"", returnStatus: true) == 0)
           }
 
           if (hasTestScript) {
             if (isUnix()) {
-              sh 'docker run --rm -v ${WORKSPACE}:/app -w /app node:18-alpine npm test'
+              sh 'docker run --rm -v ${WORKSPACE}:/app -w /app node:20-alpine npm test'
             } else {
-              bat 'docker run --rm -v %WORKSPACE%:/app -w /app node:18-alpine npm test'
+              bat 'docker run --rm -v %WORKSPACE%:/app -w /app --user root node:20-alpine npm test'
             }
           } else {
             echo 'No test script found in package.json. Skipping tests.'
