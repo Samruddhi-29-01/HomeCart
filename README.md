@@ -66,8 +66,8 @@ If you prefer to run without Docker:
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
-- MongoDB (local or cloud instance)
+- Node.js (v20 or higher)
+- npm or yarn
 
 ### Installation
 
@@ -79,20 +79,15 @@ If you prefer to run without Docker:
 2. **Set up environment variables**:
    ```bash
    cp .env.example .env
-   # Edit .env with your MongoDB connection string
+   # Edit .env with your configuration
    ```
 
-3. **Start MongoDB** (if running locally):
-   ```bash
-   mongod
-   ```
-
-4. **Run the application**:
+3. **Run the application**:
    ```bash
    npm start
    ```
 
-5. **For development**:
+4. **For development with auto-reload**:
    ```bash
    npm run dev
    ```
@@ -135,17 +130,17 @@ HomeKart/
 |----------|-------------|---------|
 | `NODE_ENV` | Environment mode | development |
 | `PORT` | Server port | 5000 |
-| `MONGODB_URI` | MongoDB connection string | mongodb://127.0.0.1:27017/homekart |
 | `JWT_SECRET` | JWT signing secret | (required) |
+| `APP_NAME` | Application name | HomeKart |
+| `APP_URL` | Application URL | http://localhost:5000 |
 
-## Docker Architecture
+## Database
 
-The application uses a multi-container setup:
-
-- **app**: Node.js application container
-- **mongodb**: MongoDB database container
-
-Containers communicate through a dedicated Docker network for security and isolation.
+HomeCart uses **SQLite** as the database:
+- Lightweight, file-based database (stored as `homekart.sqlite`)
+- No external database server required
+- Automatically initialized on first run
+- Perfect for development, testing, and production
 
 ## Contributing
 
